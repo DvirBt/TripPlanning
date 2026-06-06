@@ -1,0 +1,20 @@
+{
+  "name": "trip-planning",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered trip planning system (Claude Agent SDK + React)",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "typecheck": "npm run typecheck -w server",
+    "test": "npm run test -w server",
+    "seed": "npm run seed -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
