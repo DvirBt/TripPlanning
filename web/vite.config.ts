@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 // to the Express server so there are no CORS issues and a single origin.
 export default defineConfig({
   plugins: [react()],
+  envDir: "..",
   server: {
     port: 5173,
     proxy: {
