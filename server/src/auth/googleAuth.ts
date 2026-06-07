@@ -22,28 +22,32 @@ export function createGoogleAuth(): AuthAdapter {
       const res = await fetch(
         `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`,
       );
+
       if (!res.ok) throw new Error("Invalid or expired token");
 
+      // Access token response uses "user_id" and "issued_to";
+      // ID token response uses "sub" and "azp" — handle both.
       const data = (await res.json()) as {
-        azp?: string;
-        aud?: string;
-        sub?: string;
+        user_id?: string;   // access token
+        sub?: string;       // id token
+        issued_to?: string; // access token
+        azp?: string;       // id token
+        audience?: string;  // access token
+        aud?: string;       // id token
         email?: string;
         expires_in?: string;
       };
 
-      // Confirm the token was issued for this application.
-      if (
-        config.googleClientId &&
-        data.azp !== config.googleClientId &&
-        data.aud !== config.googleClientId
-      ) {
+      const userId = data.user_id ?? data.sub;
+      if (!userId) throw new Error("Invalid token: missing subject");
+
+      const issuedTo = data.issued_to ?? data.azp ?? data.audience ?? data.aud;
+      if (config.googleClientId && issuedTo !== config.googleClientId) {
         throw new Error("Token was not issued for this application");
       }
-      if (!data.sub) throw new Error("Invalid token: missing subject");
 
       const entry: CacheEntry = {
-        userId: data.sub,
+        userId,
         email: data.email ?? "",
         exp: now + Math.min(Number(data.expires_in ?? 0) * 1000, 5 * 60 * 1000),
       };
