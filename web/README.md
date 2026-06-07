@@ -11,8 +11,8 @@ From the repo root `npm run dev` runs this alongside the backend. To run only th
 
 ## How it works
 
-- `auth/login.ts` performs the mock "Sign in with Google" by calling `POST /api/auth/session`
-  and storing the returned bearer token. The real Firebase Web SDK path is documented in the file.
+- `auth/login.ts` performs Google Sign-In via the Firebase Web SDK (`signInWithPopup`). The ID
+  token is retrieved from the Firebase user and sent as a bearer token on every API request.
 - `components/BoundarySelector.tsx` sets the geographical limit (level + value) sent with every message.
 - `components/ChatWindow.tsx` owns the conversation. It posts to `/api/chat` and reads the
   Server-Sent Events stream via `api/chat.ts`, appending assistant text, showing tool activity,

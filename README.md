@@ -1,15 +1,11 @@
 # AI-Powered Trip Planning System
 
-A web app where users sign in, chat with an AI agent, and receive a self-contained,
+A web app where users sign in with Google, chat with an AI agent, and receive a self-contained,
 budget-aware travel itinerary restricted to a geographical boundary they choose. The agent
-is built on the Claude Agent SDK; recommendations are grounded in the user's saved
-preferences (RAG) and place data.
+is built on the Claude Agent SDK or Gemini; recommendations are grounded in the user's saved
+preferences (RAG) and real place data from the Google Places API.
 
-This is a runnable MVP. Every external dependency (Google Sign-In via Firebase, Google
-Places, the vector database) ships with an in-process mock, so the whole system runs offline.
-The only key needed to power the live agent is an Anthropic API key.
-
-## What it does (mapped to the PRD)
+## What it does
 
 - Conversational planning that asks follow-up questions when the request is vague.
 - Constraint validation that catches impossible requests (for example a $200 trip from the
@@ -18,51 +14,61 @@ The only key needed to power the live agent is an Anthropic API key.
   enforced both at the data layer and by a PreToolUse hook in the agent.
 - Personalization via a RAG preference store that is read before planning and updated when the
   user reveals new preferences.
-- A self-contained, informational itinerary (no booking links) rendered day by day.
+- A self-contained, informational itinerary (no booking links) covering restaurants and
+  attractions. Hotels are available on request.
 
 ## Architecture
-
-A modular monolith. One backend with four clear modules that map to the PRD's microservices,
-plus a React frontend. See `docs/ARCHITECTURE.md` for the data flow and `server/README.md` /
-`web/README.md` for details.
 
 ```
 web/      React + Vite UI (login, chat, boundary, itinerary)
 server/   Express backend
-  auth/   authentication (mock + Firebase)
-  agent/  Claude Agent SDK orchestration: tools, hooks, prompt, sessions
+  auth/   Firebase Authentication (token verification)
+  agent/  Claude Agent SDK / Gemini orchestration: tools, hooks, prompt, sessions
   rag/    preference vector store (retrieval + updating)
-  places/ place search (mock + Google Places)
+  places/ Google Places API integration
   geo/    geofencing boundary checks
 ```
 
 ## Quick start
 
-Requirements: Node 18+ (tested on 20/24) and an LLM API key - either an Anthropic key
-(default backend) or a Google Gemini key.
+Requirements: Node 18+, a Firebase project with Google Sign-In enabled, a Google Places API key,
+and an LLM API key (Anthropic or Gemini).
 
 ```
 npm install
-cp .env.example .env          # set a key (see "Agent backend" below); keep USE_MOCKS=true
-npm run seed                  # seed the demo user's preferences (optional)
-npm run dev                   # starts the API and the web app
+cp .env.example .env   # fill in all required keys (see below)
+npm run dev            # starts the API on :8787 and the web app on :5173
 ```
 
-### Agent backend (Claude or Gemini)
+## Required environment variables
 
-The agent can run on either LLM, selected with `AGENT_PROVIDER` in `.env`:
+Copy `.env.example` to `.env` and fill in:
 
-- `AGENT_PROVIDER=claude` (default) - uses the Claude Agent SDK; set `ANTHROPIC_API_KEY`.
-- `AGENT_PROVIDER=gemini` - uses Google Gemini (`@google/genai`); set `GEMINI_API_KEY`.
+**Agent (one of):**
+- `ANTHROPIC_API_KEY` — for `AGENT_PROVIDER=claude` (default)
+- `GEMINI_API_KEY` — for `AGENT_PROVIDER=gemini`
 
-Both backends share the same tools, system prompt, RAG store and boundary enforcement; only the
-LLM call differs. See `docs/ARCHITECTURE.md`.
+**Firebase Admin SDK (backend token verification):**
+- `FIREBASE_SERVICE_ACCOUNT` — service account JSON, pasted as a single line
+- `FIREBASE_PROJECT_ID` — your Firebase project ID
 
-Open the web app (Vite prints the URL, default http://localhost:5173), click "Sign in with
-Google" (mocked), set a boundary, and start chatting.
+**Google Places API:**
+- `GOOGLE_PLACES_API_KEY`
 
-For step-by-step end-to-end checks (including the impossible-request and boundary-enforcement
-cases), see `docs/VERIFICATION.md`.
+**Firebase Web SDK (frontend, Vite):**
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_APP_ID`
+
+### Firebase setup
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) and create a project.
+2. Enable **Authentication → Sign-in method → Google**.
+3. Go to **Project Settings → Service accounts → Generate new private key** — download the JSON.
+4. Paste the entire JSON (minified to one line) as `FIREBASE_SERVICE_ACCOUNT` in `.env`.
+5. Go to **Project Settings → Your apps → Add web app** — copy the config values into the
+   `VITE_FIREBASE_*` variables.
 
 ## Useful scripts
 
@@ -70,11 +76,3 @@ cases), see `docs/VERIFICATION.md`.
 - `npm run seed` - seed demo preferences so RAG visibly affects results.
 - `npm run typecheck` - typecheck the server.
 - `npm run test` - run the server unit tests (geofence + constraints).
-
-## Switching mocks for real services
-
-Set `USE_MOCKS=false` in `.env` and provide the relevant keys. The adapter files document the
-exact change needed:
-- Firebase auth: `server/src/auth/firebaseAuth.ts`
-- Google Places: `server/src/places/googlePlaces.ts`
-- Vector database: swap the embedding/store in `server/src/rag/`

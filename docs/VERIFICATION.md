@@ -1,75 +1,65 @@
 # Verification
 
-How to confirm the system works end to end. Steps 1-3 need no API key; the full agent flow
-(steps 4+) needs a real `ANTHROPIC_API_KEY`.
+How to confirm the system works end to end.
 
 ## Setup
 
 ```
 npm install
-cp .env.example .env     # set ANTHROPIC_API_KEY for the agent steps; keep USE_MOCKS=true
-npm run seed             # seed demo-user preferences
+cp .env.example .env     # fill in all required keys
+npm run seed             # seed demo-user preferences (optional)
 npm run dev              # backend on :8787, web on :5173
 ```
 
-## 1. Backend health and auth (no key needed)
+## 1. Backend health
 
 ```
 curl http://localhost:8787/api/health
-# -> {"ok":true,"useMocks":true}
+# -> {"ok":true}
 ```
 
-Mock login returns a token; using it on /api/preferences shows the seeded preferences:
-
-```
-TOKEN=$(curl -s -X POST http://localhost:8787/api/auth/session -d '{}' \
-  -H 'Content-Type: application/json' | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).token))")
-curl -s http://localhost:8787/api/preferences -H "Authorization: Bearer $TOKEN"
-# -> the four seeded preferences (diet, pace, interests, budget_style)
-```
-
-## 2. Unit tests (no key needed)
+## 2. Unit tests
 
 ```
 npm run test
-# geofence: city/country matching + partition; constraints: $200 USA->Africa flagged infeasible
+# geofence: city/country matching; constraints: $200 USA->Africa flagged infeasible
 ```
 
-## 3. Graceful failure without a key
+## 3. Happy path
 
-With an empty ANTHROPIC_API_KEY, POST /api/chat streams an `error` then `done` event rather
-than crashing - confirming the SSE pipeline and error handling.
+In the web app: sign in with Google, set boundary = City / Prague, then send:
+"Plan 3 days in Prague for 2 people, budget $800. We love history and good food."
 
-## 4. Happy path (key needed)
+Expect: a couple of clarifying questions if anything is ambiguous, a constraint check,
+Prague-only suggestions pulled from Google Places, and a day-by-day itinerary appearing
+in the right-hand panel with restaurants and attractions, estimated costs, and no booking links.
 
-In the web app: sign in (mocked), set boundary = City / Kyoto, then send:
-"Plan 3 relaxed days in Kyoto for 2 people, budget $1500, we love temples and street food."
+## 4. Hotels on request
 
-Expect: a couple of clarifying questions if anything is ambiguous, a constraint check, Kyoto-only
-suggestions (the seeded vegetarian preference should steer restaurant picks), and a day-by-day
-itinerary appearing in the right-hand panel with estimated costs and no booking links.
+After receiving the itinerary, say: "Can you also suggest a hotel?"
+Expect: the agent searches for hotels in Prague and presents options separately, without
+regenerating the full itinerary.
 
-## 5. Constraint catch (key needed)
+## 5. Constraint catch
 
-Send: "I have $200 to fly from the USA to Africa for a week."
-Expect: a graceful explanation that this is unrealistic, with concrete alternatives (raise the
-budget, pick a closer destination, shorten the trip). No itinerary is produced.
+Send: "I have $200 to travel from the USA to Africa for a week."
+Expect: a graceful explanation that this is unrealistic, with concrete alternatives.
+No itinerary is produced.
 
-## 6. Boundary enforcement (key needed)
+## 6. Boundary enforcement
 
-Set boundary = City / Kyoto and ask for a plan that tempts an out-of-area suggestion (for
-example "include a day trip to Tokyo"). The agent should keep everything inside Kyoto. If it
-ever tries to finalize an itinerary containing an out-of-bounds place, the PreToolUse hook
-denies it (visible as a brief retry) and the agent replaces the place. The data-layer filter in
-the places adapter means out-of-area places never even reach the agent.
+Set boundary = City / Paris and ask the agent to plan. All returned places should be in Paris.
+If the agent ever tries to finalize an itinerary containing an out-of-bounds place, the
+PreToolUse hook (Claude) or the finalizeItinerary handler (Gemini) rejects it and the agent
+corrects itself.
 
-## 7. RAG updating (key needed)
+## 7. RAG updating
 
-Tell the agent a new preference, for example "from now on I prefer window seats and boutique
-hotels." Then re-check:
+Tell the agent a new preference, for example "I always prefer vegetarian restaurants."
+Then re-check stored preferences:
 
 ```
-curl -s http://localhost:8787/api/preferences -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:8787/api/preferences -H "Authorization: Bearer <token>"
 ```
 
-The new preference should now be stored, proving dynamic updating.
+The new preference should be stored, proving dynamic updating.

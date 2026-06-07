@@ -10,10 +10,10 @@ same separation of concerns. A React frontend talks to the backend over a single
 | PRD service              | Module            | Responsibility                                            |
 |--------------------------|-------------------|-----------------------------------------------------------|
 | Frontend UI              | `web/`            | Login, chat, boundary selection, itinerary rendering      |
-| Authentication Service   | `server/src/auth` | Verify the user's token (mock or Firebase)                |
+| Authentication Service   | `server/src/auth` | Verify the user's Firebase ID token                       |
 | Agent/Orchestration      | `server/src/agent`| Claude Agent SDK: tools, hooks, prompt, session state     |
 | RAG/Database Service     | `server/src/rag`  | Store and retrieve user preferences as vectors            |
-| External Integration     | `server/src/places`| Search places (mock or Google Places)                    |
+| External Integration     | `server/src/places`| Search places via Google Places API                      |
 | (cross-cutting rule)     | `server/src/geo`  | Geofencing: is a place inside the boundary?               |
 
 ## Request flow (one chat turn)

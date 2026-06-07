@@ -1,33 +1,35 @@
-import { useState } from "react";
-import { mockLogin } from "../auth/login";
+import { GoogleLogin } from "@react-oauth/google";
+import { storeAuth } from "../auth/login";
 import type { User } from "../types";
 
-/** Landing screen with a mock "Sign in with Google" button. */
-export function LoginButton({ onLogin }: { onLogin: (auth: { token: string; user: User }) => void }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+interface Props {
+  onLogin: (auth: { token: string; user: User }) => void;
+}
 
-  const handleClick = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      onLogin(await mockLogin());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+function parseJwt(token: string): Record<string, unknown> {
+  const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  return JSON.parse(atob(base64)) as Record<string, unknown>;
+}
 
+export function LoginButton({ onLogin }: Props) {
   return (
     <div className="login">
       <h1>AI Trip Planner</h1>
       <p>Plan a personalised, budget-aware trip inside the borders you choose.</p>
-      <button className="google-btn" onClick={handleClick} disabled={loading}>
-        {loading ? "Signing in..." : "Sign in with Google"}
-      </button>
-      <p className="hint">Demo mode: sign-in is mocked and loads a seeded demo profile.</p>
-      {error && <p className="error">{error}</p>}
+      <GoogleLogin
+        onSuccess={(response) => {
+          const token = response.credential!;
+          const payload = parseJwt(token);
+          const user: User = {
+            userId: payload.sub as string,
+            email: payload.email as string,
+          };
+          storeAuth(token, user);
+          onLogin({ token, user });
+        }}
+        onError={() => console.error("Google login failed")}
+        useOneTap
+      />
     </div>
   );
 }
