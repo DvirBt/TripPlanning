@@ -6,11 +6,10 @@ import type { Preference } from "../rag/ragAdapter";
 import { describeBoundary } from "../geo/geofence";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROMPT_FILE = resolve(__dirname, "../../prompts/system-prompt.md");
+const PROMPTS_DIR = resolve(__dirname, "../../prompts");
 
-/** The static persona/rules, authored in prompts/system-prompt.md. */
-function loadBasePrompt(): string {
-  return readFileSync(PROMPT_FILE, "utf8");
+function loadPromptFile(name: string): string {
+  return readFileSync(resolve(PROMPTS_DIR, name), "utf8");
 }
 
 /**
@@ -23,11 +22,16 @@ export function buildSystemPrompt(
   boundary: Boundary,
   preferences: Preference[],
 ): string {
-  const base = loadBasePrompt();
+  const base = [
+    loadPromptFile("system-prompt.md"),
+    loadPromptFile("itinerary-guide.md"),
+    loadPromptFile("constraint-guide.md"),
+    loadPromptFile("search-guide.md"),
+  ].join("\n\n");
 
-  const boundaryBlock = `\n\n## Active geographical boundary\nYou MUST restrict every recommendation to the ${describeBoundary(
-    boundary,
-  )}. Do not suggest anything outside it.`;
+  const boundaryBlock = boundary.value.trim()
+    ? `\n\n## Active geographical boundary\nYou MUST restrict every recommendation to the ${describeBoundary(boundary)}. Do not suggest anything outside it.`
+    : "";
 
   const prefsBlock =
     preferences.length > 0

@@ -13,6 +13,7 @@ function norm(value: string): string {
 }
 
 export function isWithinBoundary(place: Place, boundary: Boundary): boolean {
+  if (!boundary.value.trim()) return true; // no boundary set → no restriction
   const target = norm(boundary.value);
   switch (boundary.level) {
     case "country":
@@ -41,6 +42,7 @@ export function partitionByBoundary(
 
 /** Human-readable label, e.g. "city of Kyoto". */
 export function describeBoundary(boundary: Boundary): string {
+  if (!boundary.value.trim()) return "destination the user specifies";
   return `${boundary.level} of ${boundary.value}`;
 }
 
@@ -60,6 +62,7 @@ export function findBoundaryViolations(
   itinerary: Itinerary,
   boundary: Boundary,
 ): ItineraryViolation[] {
+  if (!boundary.value.trim()) return []; // no boundary set → nothing to violate
   const violations: ItineraryViolation[] = [];
   for (const day of itinerary.days ?? []) {
     for (const item of day.items ?? []) {

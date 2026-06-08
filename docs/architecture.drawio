@@ -1,0 +1,163 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="TripPlanning System Architecture" id="trip-arch-v1">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ===== SWIMLANE: BROWSER ===== -->
+        <mxCell id="sw-browser" value="Browser (React + Vite :5173)" style="swimlane;fontStyle=1;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="340" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="login-btn" value="LoginButton" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-browser">
+          <mxGeometry x="30" y="60" width="130" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="chat-win" value="ChatWindow" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-browser">
+          <mxGeometry x="30" y="150" width="130" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="itin-view" value="ItineraryView" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-browser">
+          <mxGeometry x="30" y="240" width="130" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="local-storage" value="localStorage&#xa;(token, user, expiry)" style="shape=cylinder3;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="sw-browser">
+          <mxGeometry x="190" y="140" width="120" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SWIMLANE: BACKEND ===== -->
+        <mxCell id="sw-backend" value="Express Backend (:8787)" style="swimlane;fontStyle=1;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="660" height="760" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth-mw" value="Auth Middleware&#xa;(verifyToken)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
+          <mxGeometry x="30" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="token-cache" value="In-memory token cache&#xa;(5 min TTL)" style="shape=cylinder3;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="sw-backend">
+          <mxGeometry x="220" y="50" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="agent-svc" value="agentService&#xa;(routes by AGENT_PROVIDER)" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="sw-backend">
+          <mxGeometry x="30" y="160" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="gemini-svc" value="geminiService&#xa;(function-calling loop, 12 steps)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
+          <mxGeometry x="30" y="280" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="claude-svc" value="claudeService&#xa;(Claude Agent SDK + MCP)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
+          <mxGeometry x="240" y="280" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prompt-builder" value="prompt.ts&#xa;system-prompt.md&#xa;itinerary-guide.md&#xa;constraint-guide.md&#xa;search-guide.md" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="sw-backend">
+          <mxGeometry x="460" y="160" width="160" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="tool-handlers" value="toolHandlers&#xa;(shared: searchPlaces, getPrefs,&#xa;savePrefs, validate, finalize)" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="sw-backend">
+          <mxGeometry x="30" y="400" width="220" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="geofence" value="geofence&#xa;(isWithinBoundary)" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="sw-backend">
+          <mxGeometry x="280" y="400" width="150" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="places-adapter" value="googlePlaces&#xa;(Places Text Search API)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
+          <mxGeometry x="30" y="530" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="rag-adapter" value="ragAdapter + vectorStore&#xa;(in-memory preferences)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
+          <mxGeometry x="240" y="530" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="hooks" value="PreToolUse hook&#xa;(Claude: boundary check)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="sw-backend">
+          <mxGeometry x="460" y="280" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SWIMLANE: EXTERNAL SERVICES ===== -->
+        <mxCell id="sw-ext" value="External Services" style="swimlane;fontStyle=1;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="20" width="200" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="google-oauth" value="Google OAuth&#xa;tokeninfo endpoint" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
+          <mxGeometry x="20" y="50" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="google-places" value="Google Places API v1&#xa;(Text Search)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
+          <mxGeometry x="20" y="160" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="gemini-api" value="Gemini API&#xa;(gemini-2.5-flash)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
+          <mxGeometry x="20" y="270" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="claude-api" value="Anthropic Claude API&#xa;(optional backend)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
+          <mxGeometry x="20" y="380" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== EDGES ===== -->
+
+        <!-- Login flow -->
+        <mxCell id="e1" value="Google OAuth popup" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="login-btn" target="google-oauth" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="store token" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="login-btn" target="local-storage" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Chat flow -->
+        <mxCell id="e3" value="POST /api/chat (SSE)" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="chat-win" target="auth-mw" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="itinerary event" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="itin-view" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Auth middleware -->
+        <mxCell id="e5" value="verify token" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="auth-mw" target="token-cache" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="cache miss → verify" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="token-cache" target="google-oauth" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend routing -->
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="auth-mw" target="agent-svc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="Gemini" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="gemini-svc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="Claude" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="claude-svc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="system prompt" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="prompt-builder" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Tool calls -->
+        <mxCell id="e11" value="tool calls" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="gemini-svc" target="tool-handlers" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="tool calls" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="tool-handlers" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="boundary check" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool-handlers" target="geofence" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" value="searchPlaces" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool-handlers" target="places-adapter" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" value="preferences" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool-handlers" target="rag-adapter" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- External calls -->
+        <mxCell id="e16" value="Text Search API" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="places-adapter" target="google-places" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e17" value="generateContent" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="gemini-svc" target="gemini-api" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e18" value="query()" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="claude-api" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e19" value="PreToolUse" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="hooks" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

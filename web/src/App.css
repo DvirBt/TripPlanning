@@ -87,25 +87,6 @@ body {
   min-height: 0;
 }
 
-/* --- Boundary --- */
-.boundary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.boundary-label {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-.boundary select,
-.boundary input {
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
 /* --- Chat --- */
 .chat {
   display: flex;

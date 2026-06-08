@@ -11,14 +11,24 @@ const TOOL_LABELS: Record<string, string> = {
   mcp__trip__finalizeItinerary: "Putting the itinerary together...",
 };
 
+/**
+ * Best-effort extraction of a destination from the user's message.
+ * The server-side geofence passes when boundary.value is empty,
+ * so this is purely additive — the agent handles the conversation.
+ */
+function extractDestination(text: string): string {
+  const m = text.match(
+    /\b(?:visit(?:ing)?|trip\s+to|going\s+to|travel(?:l?ing)?\s+to|go\s+to|explore|in)\s+([A-Z][a-zA-Z\s-]{1,30}?)(?=\s+for\b|\s+from\b|\s+with\b|\s+in\b|\s*[,.]|$)/i,
+  );
+  return m ? m[1].trim() : "";
+}
+
 /** The chat panel: transcript, tool activity, and the message composer. */
 export function ChatWindow({
   token,
-  boundary,
   onItinerary,
 }: {
   token: string;
-  boundary: Boundary;
   onItinerary: (itinerary: Itinerary) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -30,6 +40,7 @@ export function ChatWindow({
   const [input, setInput] = useState("");
   const [activity, setActivity] = useState("");
   const [sending, setSending] = useState(false);
+  const boundary = useRef<Boundary>({ level: "city", value: "" });
   const chatId = useRef<string>(`chat-${Math.random().toString(36).slice(2)}`);
 
   const appendToAssistant = (chunk: string) => {
@@ -48,16 +59,17 @@ export function ChatWindow({
   const send = async () => {
     const text = input.trim();
     if (!text || sending) return;
-    if (!boundary.value.trim()) {
-      setActivity("Please set a boundary value (e.g. Kyoto) first.");
-      return;
-    }
+
+    // Try to extract a destination so the geofence can enforce it.
+    const dest = extractDestination(text);
+    if (dest) boundary.current = { level: "city", value: dest };
+
     setInput("");
     setSending(true);
     setMessages((prev) => [...prev, { role: "user", text }, { role: "assistant", text: "" }]);
 
     await streamChat(
-      { token, chatId: chatId.current, message: text, boundary },
+      { token, chatId: chatId.current, message: text, boundary: boundary.current },
       {
         onText: (t) => appendToAssistant(t),
         onTool: (name) => setActivity(TOOL_LABELS[name] ?? "Working..."),
