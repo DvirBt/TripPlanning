@@ -118,6 +118,17 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   },
 ];
 
+/** Returns true for transient errors that are worth retrying. */
+function isRetryable(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand") || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
+}
+
+/** Waits ms milliseconds. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** Routes a Gemini function call to the matching shared handler. */
 async function dispatchTool(
   ctx: TripContext,
@@ -187,32 +198,46 @@ export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
     history: histories.get(chatId) ?? [],
   });
 
-  try {
-    let response = await chat.sendMessage({ message });
+  // Retry up to 3 times on transient Gemini overload errors.
+  const MAX_RETRIES = 3;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      let response = await chat.sendMessage({ message });
 
-    // Tool-calling loop: keep feeding tool results back until no more calls.
-    for (let step = 0; step < 12; step++) {
-      if (response.text && response.text.trim()) sink.text(response.text);
+      // Tool-calling loop: keep feeding tool results back until no more calls.
+      for (let step = 0; step < 12; step++) {
+        if (response.text && response.text.trim()) sink.text(response.text);
 
-      const calls = response.functionCalls ?? [];
-      if (calls.length === 0) break;
+        const calls = response.functionCalls ?? [];
+        if (calls.length === 0) break;
 
-      const responseParts = [];
-      for (const call of calls) {
-        const name = call.name ?? "";
-        sink.toolStart(`mcp__trip__${name}`);
-        const result = await dispatchTool(ctx, name, call.args ?? {});
-        responseParts.push({
-          functionResponse: { name, response: result as Record<string, unknown> },
-        });
+        const responseParts = [];
+        for (const call of calls) {
+          const name = call.name ?? "";
+          sink.toolStart(`mcp__trip__${name}`);
+          const result = await dispatchTool(ctx, name, call.args ?? {});
+          responseParts.push({
+            functionResponse: { name, response: result as Record<string, unknown> },
+          });
+        }
+        response = await chat.sendMessage({ message: responseParts });
       }
-      response = await chat.sendMessage({ message: responseParts });
-    }
 
-    histories.set(chatId, chat.getHistory());
-    sink.done(response.text ?? "");
-  } catch (err) {
-    sink.error(err instanceof Error ? err.message : String(err));
-    sink.done("");
+      histories.set(chatId, chat.getHistory());
+      sink.done(response.text ?? "");
+      return;
+    } catch (err) {
+      if (isRetryable(err) && attempt < MAX_RETRIES) {
+        await sleep(1500 * attempt); // 1.5s, 3s back-off
+        continue;
+      }
+      const raw = err instanceof Error ? err.message : String(err);
+      const friendly = isRetryable(err)
+        ? "The AI service is temporarily overloaded. Please try again in a moment."
+        : raw;
+      sink.error(friendly);
+      sink.done("");
+      return;
+    }
   }
 }
