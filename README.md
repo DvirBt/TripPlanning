@@ -55,16 +55,9 @@ Copy `.env.example` to `.env` and fill in:
 **Google Places API:**
 - `GOOGLE_PLACES_API_KEY`
 
-### Google sign-in setup
-
-1. Go to [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
-2. Create an **OAuth 2.0 Client ID** (Web application).
-3. Add `http://localhost:5173` to **Authorized JavaScript origins** and **Authorized redirect URIs**.
-4. Put the Client ID in both `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`.
-5. Enable the **Places API** for the project and create an API key for `GOOGLE_PLACES_API_KEY`.
-
 The frontend obtains a Google access token via the popup sign-in flow and sends it as a bearer
-token on every API request; the backend verifies it against Google's `tokeninfo` endpoint.
+token on every API request; the backend verifies it against Google's `tokeninfo` endpoint. See
+[Getting your API keys](#getting-your-api-keys) below for step-by-step instructions.
 
 ## Useful scripts
 
@@ -72,3 +65,47 @@ token on every API request; the backend verifies it against Google's `tokeninfo`
 - `npm run seed` - seed demo preferences so RAG visibly affects results.
 - `npm run typecheck` - typecheck the server.
 - `npm run test` - run the server unit tests (geofence + constraints).
+
+## Getting your API keys
+
+You need three values, all from Google. Never commit them — keep them only in `.env`, which is
+git-ignored.
+
+### 1. `GEMINI_API_KEY` — the AI agent
+
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and sign in.
+2. Click **Create API key** (pick a Google Cloud project, or let it create one).
+3. Copy the key into `GEMINI_API_KEY`.
+
+`GEMINI_MODEL` defaults to `gemini-2.5-flash`; leave it unless you want a different model.
+
+### 2. `GOOGLE_CLIENT_ID` + `VITE_GOOGLE_CLIENT_ID` — Google sign-in
+
+These two are the **same value** (backend verification + frontend), used twice.
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) and create a project (top
+   bar → project dropdown → **New Project**), or select an existing one.
+2. One-time consent screen: **APIs & Services → OAuth consent screen** → choose **External** →
+   fill in app name and your email → **Save**. Under **Audience / Test users**, add the Google
+   account you'll sign in with (required while the app is unpublished).
+3. **APIs & Services → Credentials → + Create Credentials → OAuth client ID**.
+4. **Application type: Web application**.
+5. Under **Authorized JavaScript origins**, add `http://localhost:5173`.
+6. Under **Authorized redirect URIs**, add `http://localhost:5173`.
+7. Click **Create** and copy the **Client ID** (ends in `.apps.googleusercontent.com`).
+8. Paste that one value into **both** `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`.
+
+### 3. `GOOGLE_PLACES_API_KEY` — place search
+
+1. In the same project: **APIs & Services → Library** → search **Places API (New)** → **Enable**.
+2. **APIs & Services → Credentials → + Create Credentials → API key** → copy it.
+3. Recommended: click the key → **Restrict key** → **API restrictions** → select
+   **Places API (New)** so the key only works for Places.
+4. Paste the value into `GOOGLE_PLACES_API_KEY`.
+
+> Places API (New) requires **billing enabled** on the project (**Billing** in the left menu).
+> Google provides a free monthly allowance, but a billing account must be attached or calls
+> return `403`.
+
+Once all three are in `.env`, run `npm run dev`, open <http://localhost:5173>, sign in with
+Google, choose a boundary, and start planning.
