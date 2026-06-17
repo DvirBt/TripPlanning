@@ -1,18 +1,13 @@
-import { config } from "../config";
-import { runClaudeTurn } from "./claudeService";
 import { runGeminiTurn } from "./geminiService";
 import type { AgentTurnParams } from "./types";
 
 export type { AgentEventSink, AgentTurnParams } from "./types";
 
 /**
- * Runs one conversational turn using the configured LLM backend. Both backends
- * share the same tool logic, system prompt, RAG store and boundary enforcement;
- * only the LLM call differs. Select with AGENT_PROVIDER (claude | gemini).
+ * Runs one conversational turn. The agent is powered by Google Gemini; the
+ * shared tool logic, system prompt, RAG store and boundary enforcement all live
+ * outside this call so the LLM backend stays a thin, swappable layer.
  */
 export async function runAgentTurn(params: AgentTurnParams): Promise<void> {
-  if (config.agentProvider === "gemini") {
-    return runGeminiTurn(params);
-  }
-  return runClaudeTurn(params);
+  return runGeminiTurn(params);
 }

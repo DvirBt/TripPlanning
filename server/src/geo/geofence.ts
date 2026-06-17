@@ -54,9 +54,9 @@ export interface ItineraryViolation {
 }
 
 /**
- * Returns every place in an itinerary that violates the boundary. Used by both
- * the Claude PreToolUse hook and the shared finalize handler, so border
- * adherence is enforced the same way regardless of LLM backend.
+ * Returns every place in an itinerary that violates the boundary. Used by the
+ * finalize handler so border adherence is enforced in code, not left to the
+ * language model.
  */
 export function findBoundaryViolations(
   itinerary: Itinerary,

@@ -5,9 +5,8 @@ import { ragAdapter } from "../rag/ragAdapter";
 import { validateConstraints } from "./constraints";
 
 /**
- * Provider-agnostic tool logic. Both backends use these:
- * - the Claude path wraps each in an MCP `tool()` (tools.ts)
- * - the Gemini path calls them from its function-calling loop (geminiService.ts)
+ * The trip-planning tool logic. The Gemini backend calls these from its
+ * function-calling loop (geminiService.ts).
  *
  * Each handler returns a plain JSON-serialisable object.
  */
@@ -62,8 +61,8 @@ export function handleValidateTripConstraints(args: {
  * Validates the proposed itinerary against the boundary BEFORE accepting it.
  * If any place is out of bounds, it is rejected with the offending places so
  * the agent can fix and resubmit; otherwise it is pushed to the UI. This is the
- * geofencing guarantee for the Gemini backend (the Claude backend also has a
- * PreToolUse hook, but this keeps both behaving identically).
+ * geofencing guarantee: the boundary is enforced here in code, not left to the
+ * model.
  */
 export function handleFinalizeItinerary(ctx: TripContext, itinerary: Itinerary) {
   const violations = findBoundaryViolations(itinerary, ctx.boundary);
