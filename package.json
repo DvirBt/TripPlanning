@@ -2,7 +2,7 @@
   "name": "trip-planning",
   "version": "1.0.0",
   "private": true,
-  "description": "AI-powered trip planning system (Claude Agent SDK + React)",
+  "description": "AI-powered trip planning system (Google Gemini + React)",
   "workspaces": [
     "server",
     "web"

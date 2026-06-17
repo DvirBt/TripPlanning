@@ -9,12 +9,7 @@ dotenv.config({ path: resolve(here, "../.env") });
 export const config = {
   port: Number(process.env.PORT ?? 8787),
 
-  /** Which LLM backend powers the agent: "claude" or "gemini". */
-  agentProvider: (process.env.AGENT_PROVIDER ?? "claude").toLowerCase(),
-
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
-  agentModel: process.env.AGENT_MODEL ?? "claude-sonnet-4-6",
-
+  /** Google Gemini powers the agent. */
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   geminiModel: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
 

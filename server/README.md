@@ -1,6 +1,6 @@
 # Server
 
-The trip-planning backend: an Express app that orchestrates the Claude Agent SDK and exposes a
+The trip-planning backend: an Express app that orchestrates Google Gemini and exposes a
 small HTTP API. It is a modular monolith — see the per-module READMEs under `src/`.
 
 ## Run
@@ -8,9 +8,9 @@ small HTTP API. It is a modular monolith — see the per-module READMEs under `s
 From the repo root: `npm run dev` (runs this server and the web app). To run only the server:
 `npm run dev -w server`. It listens on `PORT` (default 8787).
 
-Environment is read in `src/config.ts` from `.env` (see `.env.example`). `AGENT_PROVIDER`
-selects the LLM backend: `claude` (needs `ANTHROPIC_API_KEY`) or `gemini` (needs `GEMINI_API_KEY`).
-Firebase and Google Places keys are required for auth and place search.
+Environment is read in `src/config.ts` from `.env` (see `.env.example`). The agent needs
+`GEMINI_API_KEY`; Google OAuth (`GOOGLE_CLIENT_ID`) and `GOOGLE_PLACES_API_KEY` are required for
+auth and place search.
 
 ## Endpoints
 
@@ -22,8 +22,7 @@ Firebase and Google Places keys are required for auth and place search.
 ## Layout
 
 ```
-prompts/system-prompt.md     the agent's rules (loaded at runtime)
-.claude/skills/              Agent Skills discovered by the SDK
+prompts/                     the agent's rules and methodology (loaded at runtime)
 src/
   config.ts                  environment configuration
   index.ts                   Express app and routes

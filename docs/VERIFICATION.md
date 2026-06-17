@@ -50,8 +50,7 @@ No itinerary is produced.
 
 Set boundary = City / Paris and ask the agent to plan. All returned places should be in Paris.
 If the agent ever tries to finalize an itinerary containing an out-of-bounds place, the
-PreToolUse hook (Claude) or the finalizeItinerary handler (Gemini) rejects it and the agent
-corrects itself.
+finalizeItinerary handler rejects it and the agent corrects itself.
 
 ## 7. RAG updating
 
