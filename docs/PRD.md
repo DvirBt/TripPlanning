@@ -5,7 +5,7 @@ The objective is to build an intelligent, web-based trip-planning system. Users 
 
 2. Target Audience & Entities
 - Primary Entity: Web users seeking automated, personalized travel planning.
-- Authentication: Users must authenticate using Google Sign-In (managed via Firebase Authentication) to access personalized features and save preferences.
+- Authentication: Users must authenticate using Google Sign-In (Google OAuth) to access personalized features and save preferences.
 - System Entities: User profiles (RAG database), Trips (itineraries, budgets, constraints), and Locations (Google Places data).
 
 3. Core Features & Requirements
@@ -34,7 +34,7 @@ Location Data (Google Places API)
 
 4. System Architecture
 - Frontend UI: A React-based web application providing the Google Sign-In interface, the interactive chat, and the visual rendering of the generated itinerary.
-- Authentication Service: Firebase Authentication to handle Google OAuth, user sessions, and secure token passing to the backend.
+- Authentication Service: Google OAuth (Google Identity Services) to handle sign-in, user sessions, and secure token passing to the backend.
 - Agent/Orchestration Service: The core brain managing the LLM prompts, analyzing user input, determining when to ask follow-up questions, and evaluating constraint logic.
 - RAG/Database Service: Manages vector embeddings and queries to retrieve user preferences, handling all read/write operations to the user profile database authenticated by the user's token.
 - External Integration Service: Handles API calls to Google Places, ensuring rate limits and geographical boundaries are maintained.

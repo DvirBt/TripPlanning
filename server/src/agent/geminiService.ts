@@ -169,8 +169,8 @@ async function dispatchTool(
  * Runs one turn on Gemini via @google/genai: a function-calling loop that feeds
  * tool results back until the model produces a final text reply. Conversation
  * history is kept per chat in memory. Geofencing is enforced inside the
- * finalizeItinerary handler (the Gemini API has no PreToolUse hook), giving the
- * same border guarantee as the Claude backend.
+ * finalizeItinerary handler, so border adherence is guaranteed in code rather
+ * than left to the model.
  */
 export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
   const { chatId, userId, message, boundary, sink } = params;

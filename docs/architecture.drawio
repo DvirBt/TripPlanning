@@ -35,15 +35,12 @@
           <mxGeometry x="220" y="50" width="150" height="50" as="geometry"/>
         </mxCell>
 
-        <mxCell id="agent-svc" value="agentService&#xa;(routes by AGENT_PROVIDER)" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="sw-backend">
+        <mxCell id="agent-svc" value="agentService&#xa;(runs one Gemini turn)" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="sw-backend">
           <mxGeometry x="30" y="160" width="180" height="50" as="geometry"/>
         </mxCell>
 
         <mxCell id="gemini-svc" value="geminiService&#xa;(function-calling loop, 12 steps)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
           <mxGeometry x="30" y="280" width="180" height="50" as="geometry"/>
-        </mxCell>
-        <mxCell id="claude-svc" value="claudeService&#xa;(Claude Agent SDK + MCP)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-backend">
-          <mxGeometry x="240" y="280" width="180" height="50" as="geometry"/>
         </mxCell>
 
         <mxCell id="prompt-builder" value="prompt.ts&#xa;system-prompt.md&#xa;itinerary-guide.md&#xa;constraint-guide.md&#xa;search-guide.md" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="sw-backend">
@@ -64,10 +61,6 @@
           <mxGeometry x="240" y="530" width="180" height="50" as="geometry"/>
         </mxCell>
 
-        <mxCell id="hooks" value="PreToolUse hook&#xa;(Claude: boundary check)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="sw-backend">
-          <mxGeometry x="460" y="280" width="160" height="50" as="geometry"/>
-        </mxCell>
-
         <!-- ===== SWIMLANE: EXTERNAL SERVICES ===== -->
         <mxCell id="sw-ext" value="External Services" style="swimlane;fontStyle=1;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="1110" y="20" width="200" height="500" as="geometry"/>
@@ -81,9 +74,6 @@
         </mxCell>
         <mxCell id="gemini-api" value="Gemini API&#xa;(gemini-2.5-flash)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
           <mxGeometry x="20" y="270" width="160" height="50" as="geometry"/>
-        </mxCell>
-        <mxCell id="claude-api" value="Anthropic Claude API&#xa;(optional backend)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sw-ext">
-          <mxGeometry x="20" y="380" width="160" height="50" as="geometry"/>
         </mxCell>
 
         <!-- ===== EDGES ===== -->
@@ -116,10 +106,7 @@
         <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="auth-mw" target="agent-svc" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e8" value="Gemini" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="gemini-svc" parent="1">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e9" value="Claude" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="claude-svc" parent="1">
+        <mxCell id="e8" value="run turn" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="gemini-svc" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e10" value="system prompt" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="agent-svc" target="prompt-builder" parent="1">
@@ -128,9 +115,6 @@
 
         <!-- Tool calls -->
         <mxCell id="e11" value="tool calls" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="gemini-svc" target="tool-handlers" parent="1">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e12" value="tool calls" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="tool-handlers" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e13" value="boundary check" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tool-handlers" target="geofence" parent="1">
@@ -148,12 +132,6 @@
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="e17" value="generateContent" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="gemini-svc" target="gemini-api" parent="1">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e18" value="query()" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="claude-api" parent="1">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e19" value="PreToolUse" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="claude-svc" target="hooks" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 

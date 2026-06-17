@@ -1,9 +1,9 @@
 # AI-Powered Trip Planning System
 
 A web app where users sign in with Google, chat with an AI agent, and receive a self-contained,
-budget-aware travel itinerary restricted to a geographical boundary they choose. The agent
-is built on the Claude Agent SDK or Gemini; recommendations are grounded in the user's saved
-preferences (RAG) and real place data from the Google Places API.
+budget-aware travel itinerary restricted to a geographical boundary they choose. The agent is
+powered by Google Gemini; recommendations are grounded in the user's saved preferences (RAG) and
+real place data from the Google Places API.
 
 ## What it does
 
@@ -11,7 +11,7 @@ preferences (RAG) and real place data from the Google Places API.
 - Constraint validation that catches impossible requests (for example a $200 trip from the
   USA to Africa) and suggests realistic alternatives.
 - Strict boundary adherence: recommendations are limited to the chosen country, state or city,
-  enforced both at the data layer and by a PreToolUse hook in the agent.
+  enforced both at the data layer and in the finalize handler before an itinerary is accepted.
 - Personalization via a RAG preference store that is read before planning and updated when the
   user reveals new preferences.
 - A self-contained, informational itinerary (no booking links) covering restaurants and
@@ -22,8 +22,8 @@ preferences (RAG) and real place data from the Google Places API.
 ```
 web/      React + Vite UI (login, chat, boundary, itinerary)
 server/   Express backend
-  auth/   Firebase Authentication (token verification)
-  agent/  Claude Agent SDK / Gemini orchestration: tools, hooks, prompt, sessions
+  auth/   Google OAuth token verification
+  agent/  Google Gemini orchestration: tools, prompt, conversation history
   rag/    preference vector store (retrieval + updating)
   places/ Google Places API integration
   geo/    geofencing boundary checks
@@ -31,8 +31,8 @@ server/   Express backend
 
 ## Quick start
 
-Requirements: Node 18+, a Firebase project with Google Sign-In enabled, a Google Places API key,
-and an LLM API key (Anthropic or Gemini).
+Requirements: Node 18+, a Google Cloud project with an OAuth 2.0 Client ID and the Places API
+enabled, and a Google Gemini (Google AI Studio) API key.
 
 ```
 npm install
@@ -44,31 +44,27 @@ npm run dev            # starts the API on :8787 and the web app on :5173
 
 Copy `.env.example` to `.env` and fill in:
 
-**Agent (one of):**
-- `ANTHROPIC_API_KEY` — for `AGENT_PROVIDER=claude` (default)
-- `GEMINI_API_KEY` — for `AGENT_PROVIDER=gemini`
+**Agent (Google Gemini):**
+- `GEMINI_API_KEY` — create one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+- `GEMINI_MODEL` — defaults to `gemini-2.5-flash`
 
-**Firebase Admin SDK (backend token verification):**
-- `FIREBASE_SERVICE_ACCOUNT` — service account JSON, pasted as a single line
-- `FIREBASE_PROJECT_ID` — your Firebase project ID
+**Google OAuth (sign-in, used by both backend token verification and the frontend):**
+- `GOOGLE_CLIENT_ID` — OAuth 2.0 Client ID (backend verifies the token was issued for it)
+- `VITE_GOOGLE_CLIENT_ID` — the same Client ID, exposed to the frontend by Vite
 
 **Google Places API:**
 - `GOOGLE_PLACES_API_KEY`
 
-**Firebase Web SDK (frontend, Vite):**
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_APP_ID`
+### Google sign-in setup
 
-### Firebase setup
+1. Go to [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
+2. Create an **OAuth 2.0 Client ID** (Web application).
+3. Add `http://localhost:5173` to **Authorized JavaScript origins** and **Authorized redirect URIs**.
+4. Put the Client ID in both `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`.
+5. Enable the **Places API** for the project and create an API key for `GOOGLE_PLACES_API_KEY`.
 
-1. Go to [console.firebase.google.com](https://console.firebase.google.com) and create a project.
-2. Enable **Authentication → Sign-in method → Google**.
-3. Go to **Project Settings → Service accounts → Generate new private key** — download the JSON.
-4. Paste the entire JSON (minified to one line) as `FIREBASE_SERVICE_ACCOUNT` in `.env`.
-5. Go to **Project Settings → Your apps → Add web app** — copy the config values into the
-   `VITE_FIREBASE_*` variables.
+The frontend obtains a Google access token via the popup sign-in flow and sends it as a bearer
+token on every API request; the backend verifies it against Google's `tokeninfo` endpoint.
 
 ## Useful scripts
 

@@ -10,7 +10,7 @@ export interface AuthedRequest extends Request {
 /**
  * Express middleware that requires a valid bearer token. On success it sets
  * req.userId / req.email; otherwise it responds 401. Token verification is
- * delegated to the Firebase auth adapter.
+ * delegated to the Google auth adapter.
  */
 export async function requireAuth(
   req: AuthedRequest,
