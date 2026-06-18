@@ -76,9 +76,25 @@ export function handleFinalizeItinerary(ctx: TripContext, itinerary: Itinerary) 
       violations,
     };
   }
-  ctx.onItinerary(itinerary);
+  ctx.onItinerary(sanitizeCoords(itinerary));
   return {
     ok: true,
     message: "Itinerary delivered to the user's screen. Briefly summarise it in chat.",
+  };
+}
+
+/** Drops any lat/lng that is not a finite number, so the map never receives junk coords. */
+function sanitizeCoords(itinerary: Itinerary): Itinerary {
+  return {
+    ...itinerary,
+    days: (itinerary.days ?? []).map((day) => ({
+      ...day,
+      items: (day.items ?? []).map((item) => {
+        // Coords are a pair: keep them only when both are finite, since a lone
+        // lat or lng is useless on the map.
+        const hasBoth = Number.isFinite(item.lat) && Number.isFinite(item.lng);
+        return { ...item, lat: hasBoth ? item.lat : undefined, lng: hasBoth ? item.lng : undefined };
+      }),
+    })),
   };
 }
