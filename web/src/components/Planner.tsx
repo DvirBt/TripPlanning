@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { streamChat, type WireFields } from "../api/chat";
-import type { ChatMessage, Itinerary, RawFields, TripErrors } from "../types";
+import type { ChatMessage, Itinerary, LlmProvider, RawFields, TripErrors } from "../types";
 import { displayToIso } from "../trip/dates";
 import { validateFields } from "../trip/validation";
 import { ChatWindow } from "./ChatWindow";
@@ -54,9 +54,11 @@ function missingFields(raw: RawFields): string[] {
  */
 export function Planner({
   token,
+  provider,
   onItinerary,
 }: {
   token: string;
+  provider: LlmProvider;
   onItinerary: (itinerary: Itinerary) => void;
 }) {
   const [fields, setFields] = useState<RawFields>(EMPTY_FIELDS);
@@ -107,7 +109,7 @@ export function Planner({
   const runTurn = async (params: { mode: "discuss" | "plan"; message?: string }) => {
     setSending(true);
     await streamChat(
-      { token, chatId: chatId.current, fields: toWireFields(fields), ...params },
+      { token, provider, chatId: chatId.current, fields: toWireFields(fields), ...params },
       {
         onText: (t) => appendToAssistant(t),
         onTool: (name) => setActivity(TOOL_LABELS[name] ?? "Working..."),

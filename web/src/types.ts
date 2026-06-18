@@ -58,3 +58,12 @@ export interface User {
   userId: string;
   email: string;
 }
+
+/** Which LLM backend powers the agent. Chosen in the model selector. */
+export type LlmProvider = "gemini" | "openai";
+
+/** The models offered in the top-right selector. */
+export const LLM_PROVIDERS: { value: LlmProvider; label: string }[] = [
+  { value: "gemini", label: "Gemini" },
+  { value: "openai", label: "ChatGPT (OpenAI)" },
+];

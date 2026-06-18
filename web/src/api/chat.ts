@@ -1,4 +1,4 @@
-import type { Itinerary, TripErrors } from "../types";
+import type { Itinerary, LlmProvider, TripErrors } from "../types";
 
 /** Partial trip fields sent as context with every turn (numbers may be omitted). */
 export interface WireFields {
@@ -32,6 +32,7 @@ export async function streamChat(
     token: string;
     chatId: string;
     mode: "discuss" | "plan";
+    provider: LlmProvider;
     message?: string;
     fields: WireFields;
   },
@@ -46,6 +47,7 @@ export async function streamChat(
     body: JSON.stringify({
       chatId: params.chatId,
       mode: params.mode,
+      provider: params.provider,
       fields: params.fields,
       ...(params.message !== undefined ? { message: params.message } : {}),
     }),

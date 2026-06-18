@@ -71,6 +71,26 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
 }
+.model-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.model-selector__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.model-selector select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
 .account button,
 .composer button {
   background: var(--panel-2);

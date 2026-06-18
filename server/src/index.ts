@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { config } from "./config";
+import { config, type LlmProvider } from "./config";
 import { runAgentTurn, type AgentEventSink } from "./agent/agentService";
 import { requireAuth, type AuthedRequest } from "./auth/middleware";
 import type { Boundary } from "./itinerary/types";
@@ -83,6 +83,11 @@ function readFields(raw: unknown): TripFields {
 app.post("/api/chat", requireAuth, async (req: AuthedRequest, res) => {
   const { chatId, message, fields } = req.body ?? {};
   const mode = req.body?.mode === "plan" ? "plan" : "discuss";
+  // The UI's model selector chooses the backend; fall back to the configured
+  // default only when the request doesn't specify a recognised provider.
+  const reqProvider = req.body?.provider;
+  const provider: LlmProvider =
+    reqProvider === "openai" || reqProvider === "gemini" ? reqProvider : config.llmProvider;
   if (typeof chatId !== "string" || !chatId) {
     res.status(400).json({ error: "chatId is required" });
     return;
@@ -140,6 +145,7 @@ app.post("/api/chat", requireAuth, async (req: AuthedRequest, res) => {
     boundary,
     mode,
     fields: promptFields,
+    provider,
     sink,
   });
 });

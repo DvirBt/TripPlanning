@@ -23,7 +23,7 @@ import type { AgentTurnParams } from "./types";
 const histories = new Map<string, Content[]>();
 
 /** Gemini function declarations mirroring the shared tool handlers. */
-const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
+export const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "searchPlaces",
     description:
@@ -157,8 +157,8 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Routes a Gemini function call to the matching shared handler. */
-async function dispatchTool(
+/** Routes a function call (Gemini or OpenAI) to the matching shared handler. */
+export async function dispatchTool(
   ctx: TripContext,
   name: string,
   args: Record<string, unknown>,
