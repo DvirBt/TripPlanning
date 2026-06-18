@@ -87,12 +87,105 @@ body {
   min-height: 0;
 }
 
-/* --- Chat --- */
-.chat {
+/* --- Planner (form on top, chat below) --- */
+.planner {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
   min-height: 0;
+}
+
+/* --- Trip fields + Start planning --- */
+.trip-section {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: 55%;
+}
+.trip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 8px;
+}
+.trip-form .field-row {
+  display: flex;
+  gap: 12px;
+}
+.trip-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.trip-form label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.trip-form input,
+.trip-form textarea {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.trip-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+.trip-form input[aria-invalid="true"],
+.trip-form textarea[aria-invalid="true"] {
+  border-color: #ff6b6b;
+}
+.trip-form .field-error {
+  color: #ff6b6b;
+  font-size: 0.75rem;
+}
+/* --- Start planning action --- */
+.plan-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 20px 16px;
+}
+.start-planning {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.start-planning:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.plan-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* --- Chat --- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.chat-title {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
 }
 .messages {
   flex: 1;

@@ -3,6 +3,7 @@ import {
   Type,
   type Content,
   type FunctionDeclaration,
+  type GenerateContentResponse,
 } from "@google/genai";
 import { config } from "../config";
 import type { Itinerary, PlaceType } from "../itinerary/types";
@@ -118,10 +119,37 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   },
 ];
 
-/** Returns true for transient errors that are worth retrying. */
-function isRetryable(err: unknown): boolean {
+/**
+ * Concatenates the text parts of a Gemini response without invoking the
+ * `response.text` getter. That getter logs a `console.warn` whenever the
+ * response also contains non-text parts (e.g. functionCall), which floods the
+ * server logs during the tool-calling loop. Reading the parts directly skips
+ * `thought` parts and is warning-free.
+ */
+export function extractText(response: Pick<GenerateContentResponse, "candidates">): string {
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  let text = "";
+  for (const part of parts) {
+    if (typeof part.text === "string" && !part.thought) text += part.text;
+  }
+  return text;
+}
+
+/**
+ * Returns true when the model rejected the request because an API usage quota
+ * was exhausted (HTTP 429 / RESOURCE_EXHAUSTED). These are NOT retried: free-tier
+ * limits are per-day, so short backoff cannot clear them.
+ */
+export function isQuotaError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand") || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
+  return msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
+}
+
+/** Returns true for transient overload errors that are worth retrying. */
+export function isRetryable(err: unknown): boolean {
+  if (isQuotaError(err)) return false;
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand");
 }
 
 /** Waits ms milliseconds. */
@@ -173,7 +201,7 @@ async function dispatchTool(
  * than left to the model.
  */
 export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
-  const { chatId, userId, message, boundary, sink } = params;
+  const { chatId, userId, message, boundary, mode, fields, sink } = params;
 
   if (!config.geminiApiKey) {
     sink.error("GEMINI_API_KEY is not set. Add it to .env to enable the agent.");
@@ -182,18 +210,34 @@ export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
   }
 
   const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+  let itineraryEmitted = false;
   const ctx: TripContext = {
     userId,
     boundary,
-    onItinerary: (itinerary) => sink.itinerary(itinerary),
+    onItinerary: (itinerary) => {
+      itineraryEmitted = true;
+      sink.itinerary(itinerary);
+    },
   };
-  const systemInstruction = buildSystemPrompt(boundary, ragAdapter.getPreferences(userId));
+  const systemInstruction = buildSystemPrompt(
+    boundary,
+    ragAdapter.getPreferences(userId),
+    mode,
+    fields,
+  );
+
+  // In discussion mode the agent must not finalize — remove the tool entirely so
+  // the "no itinerary until Start planning" guarantee holds in code, not prompt.
+  const functionDeclarations =
+    mode === "plan"
+      ? FUNCTION_DECLARATIONS
+      : FUNCTION_DECLARATIONS.filter((d) => d.name !== "finalizeItinerary");
 
   const chat = ai.chats.create({
     model: config.geminiModel,
     config: {
       systemInstruction,
-      tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
+      tools: [{ functionDeclarations }],
     },
     history: histories.get(chatId) ?? [],
   });
@@ -202,36 +246,68 @@ export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
   const MAX_RETRIES = 3;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      let response = await chat.sendMessage({ message });
-
       // Tool-calling loop: keep feeding tool results back until no more calls.
-      for (let step = 0; step < 12; step++) {
-        if (response.text && response.text.trim()) sink.text(response.text);
+      const runToolLoop = async (first: Awaited<ReturnType<typeof chat.sendMessage>>) => {
+        let response = first;
+        for (let step = 0; step < 12; step++) {
+          const text = extractText(response);
+          if (text.trim()) sink.text(text);
 
-        const calls = response.functionCalls ?? [];
-        if (calls.length === 0) break;
+          const calls = response.functionCalls ?? [];
+          if (calls.length === 0) break;
 
-        const responseParts = [];
-        for (const call of calls) {
-          const name = call.name ?? "";
-          sink.toolStart(`mcp__trip__${name}`);
-          const result = await dispatchTool(ctx, name, call.args ?? {});
-          responseParts.push({
-            functionResponse: { name, response: result as Record<string, unknown> },
-          });
+          const responseParts = [];
+          for (const call of calls) {
+            const name = call.name ?? "";
+            sink.toolStart(`mcp__trip__${name}`);
+            const result = await dispatchTool(ctx, name, call.args ?? {});
+            responseParts.push({
+              functionResponse: { name, response: result as Record<string, unknown> },
+            });
+          }
+          response = await chat.sendMessage({ message: responseParts });
         }
-        response = await chat.sendMessage({ message: responseParts });
+        return response;
+      };
+
+      let response = await runToolLoop(await chat.sendMessage({ message }));
+
+      // Safety net: in plan mode the user already confirmed by pressing Start
+      // planning, so a turn that ends without an itinerary (the model drafted
+      // prose instead of finalizing) gets one firm nudge to commit.
+      if (mode === "plan" && !itineraryEmitted) {
+        response = await runToolLoop(
+          await chat.sendMessage({
+            message:
+              "You have not finalized the itinerary yet. The user already pressed 'Start planning', so do not ask for confirmation. Unless validateTripConstraints showed the trip is infeasible, call finalizeItinerary NOW with the complete day-by-day plan covering every day — deliver it through the finalizeItinerary tool, not as chat prose.",
+          }),
+        );
       }
 
       histories.set(chatId, chat.getHistory());
-      sink.done(response.text ?? "");
+      sink.done(extractText(response));
       return;
     } catch (err) {
+      const raw = err instanceof Error ? err.message : String(err);
+      // Usage quota exhausted: distinct message, and no retry — a per-day
+      // free-tier cap will not clear on short backoff.
+      if (isQuotaError(err)) {
+        console.error(`[gemini] usage quota exhausted: ${raw}`);
+        sink.error(
+          "You've reached the Gemini API usage limit for now (free-tier quota exceeded). " +
+            "Please wait for the quota to reset or upgrade your plan: " +
+            "https://ai.google.dev/gemini-api/docs/rate-limits",
+        );
+        sink.done("");
+        return;
+      }
       if (isRetryable(err) && attempt < MAX_RETRIES) {
+        console.warn(`[gemini] retryable error (attempt ${attempt}/${MAX_RETRIES}): ${raw}`);
         await sleep(1500 * attempt); // 1.5s, 3s back-off
         continue;
       }
-      const raw = err instanceof Error ? err.message : String(err);
+      // Surface the real cause server-side for anything that reaches here.
+      console.error(`[gemini] turn failed after ${attempt} attempt(s): ${raw}`);
       const friendly = isRetryable(err)
         ? "The AI service is temporarily overloaded. Please try again in a moment."
         : raw;

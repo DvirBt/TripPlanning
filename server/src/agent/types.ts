@@ -1,4 +1,8 @@
 import type { Boundary, Itinerary } from "../itinerary/types";
+import type { TripFields } from "../trip/tripParams";
+
+/** Which phase of the flow this turn belongs to. */
+export type AgentMode = "discuss" | "plan";
 
 /** A sink the HTTP layer implements to forward agent events to the browser. */
 export interface AgentEventSink {
@@ -15,5 +19,9 @@ export interface AgentTurnParams {
   userId: string;
   message: string;
   boundary: Boundary;
+  /** "discuss" = chatty advisor (no itinerary); "plan" = build & finalize. */
+  mode: AgentMode;
+  /** The trip fields known so far, injected into the prompt as context. */
+  fields: TripFields;
   sink: AgentEventSink;
 }

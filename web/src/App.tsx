@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { getStoredAuth, logout } from "./auth/login";
-import { ChatWindow } from "./components/ChatWindow";
+import { Planner } from "./components/Planner";
 import { ItineraryView } from "./components/ItineraryView";
 import { LoginButton } from "./components/LoginButton";
 import type { Itinerary, User } from "./types";
@@ -35,7 +35,7 @@ export function App() {
             </div>
           </header>
           <main className="layout">
-            <ChatWindow token={auth.token} onItinerary={setItinerary} />
+            <Planner token={auth.token} onItinerary={setItinerary} />
             <ItineraryView itinerary={itinerary} />
           </main>
         </div>

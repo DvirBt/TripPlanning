@@ -10,6 +10,12 @@ export interface PlacesQuery {
 
 export interface PlacesAdapter {
   searchPlaces(query: PlacesQuery): Promise<Place[]>;
+  /**
+   * Resolves the country a location sits in (e.g. "Kyoto" -> "Japan"), used to
+   * set the country-level geofence boundary. Returns null if it can't be
+   * resolved so the caller can fall back gracefully.
+   */
+  resolveCountry(location: string): Promise<string | null>;
 }
 
 import { createGooglePlaces } from "./googlePlaces";
