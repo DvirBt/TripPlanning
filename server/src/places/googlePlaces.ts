@@ -95,6 +95,30 @@ function toPlace(raw: RawPlace, query: PlacesQuery): Place | null {
 
 export function createGooglePlaces(): PlacesAdapter {
   return {
+    async resolveCountry(location: string): Promise<string | null> {
+      const trimmed = location.trim();
+      if (!trimmed) return null;
+      if (!config.googlePlacesApiKey) {
+        throw new Error("GOOGLE_PLACES_API_KEY is not set in .env");
+      }
+
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": config.googlePlacesApiKey,
+          "X-Goog-FieldMask": "places.addressComponents",
+        },
+        body: JSON.stringify({ textQuery: trimmed, maxResultCount: 1, languageCode: "en" }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = (await res.json()) as { places?: RawPlace[] };
+      const components = data.places?.[0]?.addressComponents ?? [];
+      return getComponent(components, "country") || null;
+    },
+
     async searchPlaces(query: PlacesQuery): Promise<Place[]> {
       if (!config.googlePlacesApiKey) {
         throw new Error("GOOGLE_PLACES_API_KEY is not set in .env");

@@ -71,6 +71,26 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
 }
+.model-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.model-selector__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.model-selector select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
 .account button,
 .composer button {
   background: var(--panel-2);
@@ -87,12 +107,105 @@ body {
   min-height: 0;
 }
 
-/* --- Chat --- */
-.chat {
+/* --- Planner (form on top, chat below) --- */
+.planner {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
   min-height: 0;
+}
+
+/* --- Trip fields + Start planning --- */
+.trip-section {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: 55%;
+}
+.trip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 8px;
+}
+.trip-form .field-row {
+  display: flex;
+  gap: 12px;
+}
+.trip-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.trip-form label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.trip-form input,
+.trip-form textarea {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.trip-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+.trip-form input[aria-invalid="true"],
+.trip-form textarea[aria-invalid="true"] {
+  border-color: #ff6b6b;
+}
+.trip-form .field-error {
+  color: #ff6b6b;
+  font-size: 0.75rem;
+}
+/* --- Start planning action --- */
+.plan-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 20px 16px;
+}
+.start-planning {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.start-planning:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.plan-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* --- Chat --- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.chat-title {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
 }
 .messages {
   flex: 1;
@@ -196,4 +309,97 @@ body {
 .cost {
   color: var(--muted);
   white-space: nowrap;
+}
+
+/* Itinerary header + Itinerary/Map toggle */
+.itinerary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.view-toggle button {
+  border: none;
+  background: #f4f4f5;
+  padding: 6px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+.view-toggle button.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Map view */
+.itinerary-map {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.day-pills,
+.mode-toggle {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.day-pills .pill,
+.mode-toggle .mode {
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.day-pills .pill.active,
+.mode-toggle .mode.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+.map-canvas {
+  width: 100%;
+  height: 460px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+.map-canvas > * {
+  width: 100%;
+  height: 100%;
+}
+.map-pin {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.map-notice,
+.map-error,
+.map-missing-key {
+  font-size: 13px;
+  color: #6b7280;
+}
+.map-error {
+  color: #b45309;
 }

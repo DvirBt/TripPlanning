@@ -13,6 +13,10 @@ import { validateConstraints } from "./constraints";
 export interface TripContext {
   userId: string;
   boundary: Boundary;
+  /** Number of days the trip must cover (from the date range). When set,
+   *  finalize rejects an itinerary that covers fewer days, so "cover every day"
+   *  is guaranteed in code rather than left to the model. Unset in discussion. */
+  expectedDays?: number;
   /** Called when an itinerary passes validation, to push it to the UI. */
   onItinerary: (itinerary: Itinerary) => void;
 }
@@ -76,9 +80,38 @@ export function handleFinalizeItinerary(ctx: TripContext, itinerary: Itinerary) 
       violations,
     };
   }
-  ctx.onItinerary(itinerary);
+  // Day-coverage guarantee: the plan must cover every day of the trip. Enforced
+  // here in code (like the boundary) so a model that under-delivers gets the
+  // itinerary bounced back to complete, rather than the user seeing a stub.
+  const dayCount = (itinerary.days ?? []).length;
+  if (ctx.expectedDays !== undefined && dayCount < ctx.expectedDays) {
+    return {
+      ok: false,
+      error:
+        `Rejected: the itinerary covers only ${dayCount} day(s) but the trip spans ` +
+        `${ctx.expectedDays} day(s). Add the missing days — one entry per day of the ` +
+        `date range — and call finalizeItinerary again with the complete plan.`,
+    };
+  }
+  ctx.onItinerary(sanitizeCoords(itinerary));
   return {
     ok: true,
     message: "Itinerary delivered to the user's screen. Briefly summarise it in chat.",
+  };
+}
+
+/** Drops any lat/lng that is not a finite number, so the map never receives junk coords. */
+function sanitizeCoords(itinerary: Itinerary): Itinerary {
+  return {
+    ...itinerary,
+    days: (itinerary.days ?? []).map((day) => ({
+      ...day,
+      items: (day.items ?? []).map((item) => {
+        // Coords are a pair: keep them only when both are finite, since a lone
+        // lat or lng is useless on the map.
+        const hasBoth = Number.isFinite(item.lat) && Number.isFinite(item.lng);
+        return { ...item, lat: hasBoth ? item.lat : undefined, lng: hasBoth ? item.lng : undefined };
+      }),
+    })),
   };
 }
