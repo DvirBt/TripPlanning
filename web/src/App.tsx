@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { getStoredAuth, logout } from "./auth/login";
-import { ChatWindow } from "./components/ChatWindow";
+import { Planner } from "./components/Planner";
 import { ItineraryView } from "./components/ItineraryView";
 import { LoginButton } from "./components/LoginButton";
-import type { Itinerary, User } from "./types";
+import { ModelSelector } from "./components/ModelSelector";
+import type { Itinerary, LlmProvider, User } from "./types";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
@@ -13,6 +14,7 @@ export function App() {
     () => getStoredAuth(),
   );
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
+  const [provider, setProvider] = useState<LlmProvider>("gemini");
 
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
@@ -23,6 +25,7 @@ export function App() {
           <header className="topbar">
             <div className="brand">AI Trip Planner</div>
             <div className="account">
+              <ModelSelector value={provider} onChange={setProvider} />
               <span>{auth.user.email}</span>
               <button
                 onClick={() => {
@@ -35,7 +38,7 @@ export function App() {
             </div>
           </header>
           <main className="layout">
-            <ChatWindow token={auth.token} onItinerary={setItinerary} />
+            <Planner token={auth.token} provider={provider} onItinerary={setItinerary} />
             <ItineraryView itinerary={itinerary} />
           </main>
         </div>
