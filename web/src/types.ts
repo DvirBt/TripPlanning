@@ -13,6 +13,8 @@ export interface ItineraryItem {
   country: string;
   note: string;
   estimatedCost: number;
+  lat?: number;
+  lng?: number;
 }
 
 export interface ItineraryDay {
