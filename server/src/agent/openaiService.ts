@@ -38,7 +38,7 @@ function sleep(ms: number): Promise<void> {
  * so all business logic and the geofencing guarantee stay backend-agnostic.
  */
 export async function runOpenAITurn(params: AgentTurnParams): Promise<void> {
-  const { chatId, userId, message, boundary, mode, fields, sink } = params;
+  const { chatId, userId, message, boundary, mode, fields, expectedDays, sink } = params;
 
   if (!config.openaiApiKey) {
     sink.error("OPENAI_API_KEY is not set. Add it to .env to use the ChatGPT backend.");
@@ -51,6 +51,7 @@ export async function runOpenAITurn(params: AgentTurnParams): Promise<void> {
   const ctx: TripContext = {
     userId,
     boundary,
+    expectedDays,
     onItinerary: (itinerary) => {
       itineraryEmitted = true;
       sink.itinerary(itinerary);

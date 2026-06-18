@@ -26,6 +26,9 @@ export interface AgentTurnParams {
   mode: AgentMode;
   /** The trip fields known so far, injected into the prompt as context. */
   fields: TripFields;
+  /** In plan mode, the number of days the trip must cover (from the validated
+   *  date range). Used to enforce full day coverage at finalize. */
+  expectedDays?: number;
   /** Which LLM backend to run this turn on. */
   provider: LlmProvider;
   sink: AgentEventSink;

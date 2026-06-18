@@ -72,3 +72,35 @@ test("out-of-boundary place is still rejected regardless of coords", () => {
   assert.equal(res.ok, false);
   assert.equal(calls.length, 0);
 });
+
+/** Builds an itinerary spanning `n` days (all in-boundary). */
+function makeMultiDay(n: number): Itinerary {
+  const it = makeItinerary();
+  it.days = Array.from({ length: n }, (_, i) => ({
+    date: `2026-07-0${i + 1}`,
+    items: [{ ...it.days[0].items[0] }],
+  }));
+  return it;
+}
+
+test("an itinerary covering fewer days than expected is rejected", () => {
+  const { calls, ctx } = capture();
+  const res = handleFinalizeItinerary({ ...ctx, expectedDays: 10 }, makeMultiDay(1));
+  assert.equal(res.ok, false);
+  assert.equal(calls.length, 0);
+});
+
+test("an itinerary covering every expected day is accepted", () => {
+  const { calls, ctx } = capture();
+  const res = handleFinalizeItinerary({ ...ctx, expectedDays: 3 }, makeMultiDay(3));
+  assert.equal(res.ok, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].days.length, 3);
+});
+
+test("no day enforcement when expectedDays is unset", () => {
+  const { calls, ctx } = capture();
+  const res = handleFinalizeItinerary(ctx, makeMultiDay(1));
+  assert.equal(res.ok, true);
+  assert.equal(calls.length, 1);
+});

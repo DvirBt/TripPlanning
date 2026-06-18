@@ -96,6 +96,7 @@ app.post("/api/chat", requireAuth, async (req: AuthedRequest, res) => {
   let agentMessage: string;
   let promptFields: TripFields;
   let boundary: Boundary;
+  let expectedDays: number | undefined;
 
   if (mode === "plan") {
     // Planning requires all fields to be present and valid.
@@ -107,6 +108,7 @@ app.post("/api/chat", requireAuth, async (req: AuthedRequest, res) => {
     boundary = await ensureBoundary(chatId, result.value!.where);
     agentMessage = composePlanMessage(result.value!);
     promptFields = readFields(fields);
+    expectedDays = result.value!.days;
   } else {
     if (typeof message !== "string" || !message.trim()) {
       res.status(400).json({ error: "A message is required to chat." });
@@ -145,6 +147,7 @@ app.post("/api/chat", requireAuth, async (req: AuthedRequest, res) => {
     boundary,
     mode,
     fields: promptFields,
+    expectedDays,
     provider,
     sink,
   });
