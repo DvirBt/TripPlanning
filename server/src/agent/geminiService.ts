@@ -105,6 +105,8 @@ export const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
                     country: { type: Type.STRING },
                     note: { type: Type.STRING },
                     estimatedCost: { type: Type.NUMBER },
+                    lat: { type: Type.NUMBER, description: "Latitude from the searchPlaces result" },
+                    lng: { type: Type.NUMBER, description: "Longitude from the searchPlaces result" },
                   },
                   required: ["time", "placeName", "placeType", "city", "state", "country", "note", "estimatedCost"],
                 },
@@ -201,7 +203,7 @@ export async function dispatchTool(
  * than left to the model.
  */
 export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
-  const { chatId, userId, message, boundary, mode, fields, sink } = params;
+  const { chatId, userId, message, boundary, mode, fields, expectedDays, sink } = params;
 
   if (!config.geminiApiKey) {
     sink.error("GEMINI_API_KEY is not set. Add it to .env to enable the agent.");
@@ -214,6 +216,7 @@ export async function runGeminiTurn(params: AgentTurnParams): Promise<void> {
   const ctx: TripContext = {
     userId,
     boundary,
+    expectedDays,
     onItinerary: (itinerary) => {
       itineraryEmitted = true;
       sink.itinerary(itinerary);

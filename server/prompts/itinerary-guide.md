@@ -17,6 +17,7 @@ Follow these rules when assembling a day-by-day plan from searchPlaces results.
 
 ### Finishing the plan
 - Every place in the itinerary MUST come from a searchPlaces result. Never invent a place or use one from memory.
+- For each item, copy the chosen place's `lat` and `lng` from its searchPlaces result into the item so it can be shown on the map. If a place has no coordinates, omit them.
 - When you are ready to commit the plan, call finalizeItinerary with the complete structured itinerary.
 - If finalizeItinerary rejects a place as out-of-bounds, replace it with an in-boundary option from searchPlaces and call finalizeItinerary again.
 - The itinerary is self-contained and informational only. No booking links.

@@ -54,6 +54,9 @@ export interface ItineraryItem {
   country: string;
   note: string;
   estimatedCost: number;
+  /** Optional coordinates copied from the searchPlaces result, used by the map. */
+  lat?: number;
+  lng?: number;
 }
 
 /** One day of the trip. */
